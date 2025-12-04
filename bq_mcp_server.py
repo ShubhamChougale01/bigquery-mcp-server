@@ -11,6 +11,9 @@ import asyncio
 import config
 import logging
 from collections import defaultdict
+from dotenv import load_dotenv
+from google.api_core.client_info import ClientInfo
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -169,7 +172,8 @@ class BigQueryMCPServer:
                 )
                 session.bigquery_client = bigquery.Client(
                     project=self.project_id,
-                    credentials=credentials
+                    credentials=credentials,
+                    client_info=ClientInfo(user_agent="MCP-Server-1.0") 
                 )
             else:
                 # Use application default credentials

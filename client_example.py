@@ -1,7 +1,10 @@
 import asyncio
+import os
 import json
 from bq_mcp_server import BigQueryMCPServer
 import config
+from dotenv import load_dotenv
+load_dotenv()
 
 async def test_client():
     # Initialize server
