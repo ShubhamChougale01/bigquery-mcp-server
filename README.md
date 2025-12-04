@@ -93,6 +93,11 @@ Give roles:
 * BigQuery Data Editor
 * BigQuery Job User
 
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
 Generate JSON key:
 ```
 Keys → Add Key → JSON
@@ -125,9 +130,9 @@ REGISTERED_CLIENTS = {
 ---
 
 ## 3️⃣ Create Sample Dataset & Table
-
-### Create dataset:
-
+ - `PROJECT_ID` – your GCP project ID
+ - `GOOGLE_APPLICATION_CREDENTIALS` – path to the BigQuery service account JSON key (or put the file next to the repo and set this to `./bigquery-credentials.json`)
+ - `CLIENTS_JSON` – JSON string of registered clients, e.g. `{"demo_client_id_123":"demo_secret_xyz789"}`
 ```
 test_db
 ```
@@ -277,6 +282,8 @@ Below is the diagram.
                 │ - Validates credentials     │
                 │ - Issues session tokens     │
                 └──────────────┬─────────────┘
+### Note on Registered Clients
+The server loads registered client credentials from `config.REGISTERED_CLIENTS` (which comes from the `CLIENTS_JSON` environment variable). If `CLIENTS_JSON` is not set, the server falls back to built-in demo clients defined inside `bq_mcp_server.py`.
                                │ 2. session_token
                                ▼
                ┌──────────────────────────────┐

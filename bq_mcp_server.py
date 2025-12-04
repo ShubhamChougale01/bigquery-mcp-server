@@ -62,11 +62,18 @@ class AuthenticationManager:
     """Manages client authentication and session lifecycle"""
     
     def __init__(self):
-        # In production, store these securely (e.g., environment variables, secret manager)
-        self.registered_clients = {
+        # Load registered clients from `config.REGISTERED_CLIENTS` if provided.
+        # `config.REGISTERED_CLIENTS` is expected to be a dict (loaded from CLIENTS_JSON env var)
+        # Fallback to the built-in demo clients for convenience.
+        default_clients = {
             "demo_client_id_123": "demo_secret_xyz789",
             "analytics_client_456": "secret_abc123def"
         }
+        registered = getattr(config, "REGISTERED_CLIENTS", None)
+        if isinstance(registered, dict) and registered:
+            self.registered_clients = registered
+        else:
+            self.registered_clients = default_clients
         self.active_sessions: Dict[str, ClientSession] = {}
         self.session_duration = timedelta(hours=1)
     

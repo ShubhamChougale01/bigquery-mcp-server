@@ -51,7 +51,7 @@ async def test_client():
         "params": {
             "name": "bq.run_query",
             "arguments": {
-                "sql": "SELECT COUNT(*) as total FROM `bigquery-mcp-server-480213.test_db.sample_table`",
+                "sql": f"SELECT COUNT(*) as total FROM `{config.PROJECT_ID}.test_db.sample_table`",
                 "max_results": 10
             },
             "session_token": token
@@ -66,7 +66,7 @@ async def test_client():
         "params": {
             "name": "bq.run_query",
             "arguments": {
-                "sql": "SELECT * FROM `bigquery-mcp-server-480213.test_db.sample_table` LIMIT 5",
+                "sql": f"SELECT * FROM `{config.PROJECT_ID}.test_db.sample_table` LIMIT 5",
                 "max_results": 5
             },
             "session_token": token
@@ -119,7 +119,7 @@ async def test_client():
             "params": {
                 "name": "bq.run_query",
                 "arguments": {
-                    "sql": "SELECT COUNT(*) as total FROM `bigquery-mcp-server-480213.test_db.sample_table`",
+                    "sql": f"SELECT COUNT(*) as total FROM `{config.PROJECT_ID}.test_db.sample_table`",
                     "max_results": 10
                 },
                 "session_token": token2
