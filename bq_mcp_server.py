@@ -9,6 +9,16 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import asyncio
 import config
+import logging
+from collections import defaultdict
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ClientSession:
@@ -19,7 +29,32 @@ class ClientSession:
     expires_at: datetime
     bigquery_client: Optional[bigquery.Client] = None
 
+class RateLimiter:
+    def __init__(self, max_requests=20, window=60):
+        """
+        max_requests = number of requests allowed
+        window = time window in seconds
+        """
+        self.requests = defaultdict(list)
+        self.max_requests = max_requests
+        self.window = window
 
+    def allow(self, client_id):
+        now = time.time()
+        window_start = now - self.window
+        req_times = self.requests[client_id]
+
+        # Remove timestamps older than the window
+        self.requests[client_id] = [t for t in req_times if t > window_start]
+
+        # Check if limit reached
+        if len(self.requests[client_id]) >= self.max_requests:
+            return False
+
+        # Otherwise add this request time
+        self.requests[client_id].append(now)
+        return True
+    
 class AuthenticationManager:
     """Manages client authentication and session lifecycle"""
     
@@ -97,6 +132,7 @@ class BigQueryMCPServer:
         self.project_id = project_id
         self.credentials_path = credentials_path
         self.auth_manager = AuthenticationManager()
+        self.rate_limiter = RateLimiter(max_requests=30, window=60)
         
         # Tool definitions following MCP protocol
         self.tools = {
@@ -156,14 +192,16 @@ class BigQueryMCPServer:
         try:
             method = request.get("method")
             params = request.get("params", {})
+
+            logger.info(f"Incoming request: method={method}, params={params}")
             
-            # Handle authentication request
             if method == "auth/authenticate":
                 return await self._handle_authentication(params)
             
             # All other methods require authentication
             session_token = params.get("session_token")
             if not session_token or not self.auth_manager.validate_session(session_token):
+                logger.warning(f"Unauthorized access attempt with token: {session_token}")
                 return {
                     "error": {
                         "code": "UNAUTHORIZED",
@@ -171,10 +209,16 @@ class BigQueryMCPServer:
                     }
                 }
             
-            # Get session
             session = self.auth_manager.get_session(session_token)
-            
-            # Handle tool calls
+            # RATE LIMIT CHECK
+            if not self.rate_limiter.allow(session.client_id):
+                logger.warning(f"RATE LIMIT: client={session.client_id} exceeded request limit.")
+                return {
+                    "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "Too many requests. Slow down."
+                    }
+                }
             if method == "tools/list":
                 return {"tools": list(self.tools.values())}
             
