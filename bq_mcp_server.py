@@ -441,10 +441,10 @@ async def main():
     credentials_path=config.CREDENTIALS_PATH
 )
     
-    print("=== BigQuery MCP Server Demo ===\n")
+    logging.info("=== BigQuery MCP Server Demo ===\n")
     
     # Client 1: Authenticate
-    print("Client 1: Authenticating...")
+    logging.info("Client 1: Authenticating...")
     auth_request = {
         "method": "auth/authenticate",
         "params": {
@@ -453,13 +453,13 @@ async def main():
         }
     }
     auth_response = await server.handle_request(auth_request)
-    print(f"Response: {json.dumps(auth_response, indent=2)}\n")
+    logging.info(f"Response: {json.dumps(auth_response, indent=2)}\n")
     
     if "result" in auth_response:
         client1_token = auth_response["result"]["session_token"]
         
         # Client 1: List tables
-        print("Client 1: Listing tables...")
+        logging.info("Client 1: Listing tables...")
         list_request = {
             "method": "tools/call",
             "params": {
@@ -471,10 +471,10 @@ async def main():
             }
         }
         list_response = await server.handle_request(list_request)
-        print(f"Response: {json.dumps(list_response, indent=2)}\n")
+        logging.info(f"Response: {json.dumps(list_response, indent=2)}\n")
     
     # Client 2: Authenticate with different credentials
-    print("Client 2: Authenticating...")
+    logging.info("Client 2: Authenticating...")
     auth_request2 = {
         "method": "auth/authenticate",
         "params": {
@@ -483,22 +483,22 @@ async def main():
         }
     }
     auth_response2 = await server.handle_request(auth_request2)
-    print(f"Response: {json.dumps(auth_response2, indent=2)}\n")
+    logging.info(f"Response: {json.dumps(auth_response2, indent=2)}\n")
     
     # Demonstrate unauthorized access
-    print("Attempting unauthorized access...")
+    logging.info("Attempting unauthorized access...")
     unauthorized_request = {
         "method": "tools/call",
         "params": {
             "name": "bq.list_tables",
-            "arguments": {"dataset_id": "test_db"}, # replace with actual dataset
+            "arguments": {"dataset_id": "test_db"}, 
             "session_token": "invalid_token_123"
         }
     }
     unauthorized_response = await server.handle_request(unauthorized_request)
-    print(f"Response: {json.dumps(unauthorized_response, indent=2)}\n")
+    logging.info(f"Response: {json.dumps(unauthorized_response, indent=2)}\n")
     
-    print("=== Demo Complete ===")
+    logging.info("=== Demo Complete ===")
 
 
 if __name__ == "__main__":
